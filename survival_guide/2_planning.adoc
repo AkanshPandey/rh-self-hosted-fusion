@@ -1,0 +1,580 @@
+= Fusion 5 Survival Guide: Plan Your Fusion Deployment
+:toc:
+:toclevels: 3
+:toc-title:
+
+// tag::body[]
+
+This topic explains how to plan and execute a Fusion deployment at the scale you need for staging or production.
+
+While the `setup_f5_*.sh` scripts are handy for getting started / proof-of-concept purposes, this section walks you through the planning process for building a production-ready environment.
+
+:sectnums:
+[[prerequisites]]
+=== Meet the prerequisites
+
+You must meet these prerequisites before you can customize your Fusion cluster:
+
+* A local copy of the link:https://github.com/lucidworks/fusion-cloud-native[*fusion-cloud-native repo*^], up to date with the latest master branch.
+
+* Any cloud provider-specific *command line tools*, such as `gcloud` or `aws`, and `kubectl`.
++
+See the platform-specific instructions linked above, or check with your cloud provider.
+
+* *Helm v3*
++
+On a Mac:
++
+[source,bash]
+----
+brew upgrade kubernetes-helm
+----
++
+For other operating systems, download from link:https://github.com/helm/helm/releases[Helm Releases^].
++
+Verify:
++
+[source,bash]
+----
+helm version --short
+v3.0.0+ge29ce2a
+----
+
+* *a Kubernetes namespace*
++
+Collect the following information about your K8s environment:
++
+** *CLUSTER*: Cluster name (passed to our setup scripts using the `-c` arg)
+** *NAMESPACE*: K8s namespace where to install Fusion; a namespace should only contain lowercase letters (a-z), digits (0-9), or dash. No periods or underscores allowed.
++
+*Tips:*
++
+** Fusion 5 service discovery requires all services for the same release be deployed in the same namespace. Moreover, you should only run one instance of Fusion in a namespace. If you need multiple instances of Fusion running in the same Kubernetes cluster, then you need to deploy them in separate namespaces.
+** If your organization requires CPU / Memory quotas for namespaces, you can start with a minimum of 12 CPU and 45GB of RAM (such as 3 x n1-standard-4 on GKE), but you will need to increase the quotas once you start load testing Fusion with production workloads and real datasets.
+** Fusion requires at least 3 Zookeeper nodes and 2 Solr nodes to achieve high availability.
+
+In addition, you may need to clarify your organization's DockerHub policy.  The Fusion Helm chart points to public Docker images on DockerHub. Your organization may not allow K8s to pull images directly from DockerHub or may require additional security scanning before loading images into production clusters.
+
+Work with your K8s / Docker admin team to determine how to get the Fusion images loaded into a registry that is accessible to your cluster. You can update the image for each service using the custom values YAML file discussed in the next section.
+
+[[custom-values]]
+=== Create a custom values YAML file
+
+Throughout this topic, you will make changes to a custom values YAML file to refine your configuration of Fusion. We provide a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example` template^] and a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customization script^] to help you create a custom values YAML file for your deployment. Our setup scripts (`setup_f5_*.sh`) also use the `customize_fusion_values.sh` script.
+
+TIP: Keep the custom values YAML file in version control.  You will need to make changes to it over time as you fine-tune your Fusion installation. You will also need it to perform upgrades; if you try to upgrade your Fusion installation and neglect to provide the custom values YAML, your deployment will revert to chart defaults.
+
+. In your local copy of the fusion-cloud-native repo, run the `customize_fusion_values.sh` utility script to create a working copy of the custom values YAML file:
++
+```
+./customize_fusion_values.sh  --provider <provider> -c <cluster> -n <namespace> \
+  --num-solr 3 \
+  --solr-disk-gb 100 \
+  --node-pool <node_selector> \
+  --prometheus true \
+  --with-resource-limits \
+  --with-affinity-rules
+```
++
+The script will create a custom values YAML using the naming convention: `<provider>_<cluster>_<namespace>_fusion_values.yaml`, e.g. `gke_search_f5_fusion_values.yaml`
++
+--
+* `<provider>` is the K8s platform you’re running on, such as `gke`.
+* `<cluster>` is the name of your cluster.
+* `<namespace>` is the K8s namespace where you want to install Fusion
+* `<node_selector>` specifies a `nodeSelector` label to find nodes to schedule Fusion pods on
+--
+
+Providing the correct `--node-pool <node_selector>` label *is very important*! Using the wrong value will cause your pods to be stuck in the `pending` state. If you're not sure about the correct value for your cluster, then you can pass `'{}'` to let Kubernetes decide which nodes to schedule Fusion pods on.
+Default node selector labels are provider specific; our scripts use the following defaults for GKE and EKS:
+[width="60%",cols="2,6",options="header"]
+|=========================================================
+|Provider|Default Node Selector
+|GKE|cloud.google.com/gke-nodepool: default-pool
+|EKS|alpha.eksctl.io/nodegroup-name: standard-workers
+|=========================================================
+
+You can also add a Fusion specific label to your nodes by doing:
+----
+kubectl label <NODE_ID> fusion_node_type=<NODE_LABEL>
+----
+Then you can pass `--node-pool 'fusion_node_type: <NODE_LABEL>'`
+
+The script creates the following files using the naming convention: `<provider>_<cluster>_<namespace>_`:
+--
+* `<provider>_<cluster>_<namespace>_fusion_values.yaml`: Main custom values YAML used to override Helm chart defaults for Fusion microservices.
+* `<provider>_<cluster>_<namespace>_monitoring_values.yaml`: Custom values yaml used to configure Prometheus and Grafana.
+* `<provider>_<cluster>_<namespace>_fusion_resources.yaml`: Resource requests and limits for all Microservices.
+* `<provider>_<cluster>_<namespace>_fusion_affinity.yaml`: Pod affinity rules to ensure mulitple replicas for a single service are evenly distributed across zones and nodes.
+* `<provider>_<cluster>_<namespace>_upgrade_fusion.sh`: Script used to install and/or upgrade Fusion using the aforementioned custom values YAML files.
+--
+
+TIP: Pass the `--help` parameter to see script usage details
+
+The script provides additional flags to configure resource requests/limits (`--with-resource-limits`), replica counts (`--with-replicas`), and pod affinity rules (`--with-affinity-rules`) for Fusion services.
+
+. Review the `<provider>_<cluster>_<release>_fusion_values.yaml` output file to familiarize yourself with its structure and contents.
+.. Notice it contains a separate section for each of the
+ifdef::env-github[]
+// github link:
+See link:1_concepts.adoc#overview-of-fusion-microservices[Fusion microservices].
+endif::[]
+ifndef::env-github[]
+// docs site link:
+link:/fusion-server/latest/concepts/deployment/kubernetes/microservices.html[Fusion microservices].
+endif::[]
+.. Take a look at the configuration for the query-pipeline service to illustrate some important concepts about the custom values YAML (extra spacing added for display purposes only):
++
+[source,yaml]
+----
+  query-pipeline:           # Service-specific setting overrides under the top-level heading
+
+    enabled: true           # Every Fusion service has an implicit enabled flag that defaults
+                            # to true, set to false to remove this service from your cluster
+
+    nodeSelector:           # Node selector identifies the label find nodes to schedule pods on
+      cloud.google.com/gke-nodepool: default-pool
+
+    javaToolOptions: "..."  # Used to pass JVM options to the service
+
+    pod:                    # Pod annotations to allow Prometheus to scrape metrics from the service
+      annotations:
+        prometheus.io/port: "8787"
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+----
+
+. Commit all output files from the `./customize_fusion_values.sh` script to version control.
+
+Once we go through all of the configuration topics in this topic, you'll have a well-configured custom values YAML file for your Fusion 5 installation. You'll then use this file during the Helm v3 installation at the end of this topic.
+
+[[solr-sizing]]
+=== Configure Solr sizing
+
+When you're ready to build a production-ready setup for Fusion 5, you need to customize the Fusion Helm chart to ensure Fusion is well-configured for production workloads.
+
+You'll be able to scale the number of nodes for Solr up and down after building the cluster, but you need to establish the initial size of the nodes (memory and CPU) and size / type of disks you need.
+
+Let's walk through an example config so you understand which parameters to change in the custom values YAML file.
+
+[source,yaml]
+----
+solr:
+  resources:                    # Set resource limits for Solr to help K8s pod scheduling;
+    limits:                     # these limits are not just for the Solr process in the pod,
+      cpu: "7700m"              # so allow ample memory for loading index files into the OS cache (mmap)
+      memory: "26Gi"
+    requests:
+      cpu: "7000m"
+      memory: "25Gi"
+  logLevel: WARN
+  nodeSelector:
+    fusion_node_type: search    # Run this Solr StatefulSet in the "search" node pool
+  exporter:
+    enabled: true               # Enable the Solr metrics exporter (for Prometheus) and
+                                # schedule on the default node pool (system partition)
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+      prometheus.io/path: "/metrics"
+    nodeSelector:
+      cloud.google.com/gke-nodepool: default-pool
+  image:
+    tag: 8.4.1
+  updateStrategy:
+    type: "RollingUpdate"
+  javaMem: "-Xmx3g -Dfusion_node_type=system" # Configure memory settings for Solr
+  solrGcTune: "-XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
+  volumeClaimTemplates:
+    storageSize: "100Gi"        # Size of the Solr disk
+  replicaCount: 6               # Number of Solr pods to run in this StatefulSet
+
+zookeeper:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 3               # Number of Zookeepers
+  persistence:
+    size: 20Gi
+  resources: {}
+  env:
+    ZK_HEAP_SIZE: 1G
+    ZOO_AUTOPURGE_PURGEINTERVAL: 1
+----
+
+To be clear, you can tune GC settings and number of replicas after the cluster is built. But changing the size of the persistent volumes is more complicated so you should try to pick a good size initially.
+
+==== Configure storage class for Solr pods (optional)
+
+If you wish to run with a storage class other than the default you can create a storage class for your Solr pods before you install. For example, to create regional disks in GCP you can create a file called `storageClass.yaml` with the following contents:
+
+[source,yaml]
+----
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+ name: solr-gke-storage-regional
+provisioner: kubernetes.io/gce-pd
+parameters:
+ type: pd-standard
+ replication-type: regional-pd
+ zones: us-west1-b, us-west1-c
+----
+
+and then provision into your cluster by calling:
+
+[source,bash]
+----
+kubectl apply -f storageClass.yaml
+----
+
+to then have Solr use the storage class by adding the following to the custom values YAML:
+
+[source,yaml]
+----
+solr:
+  volumeClaimTemplates:
+    storageClassName: solr-gke-storage-regional
+    storageSize: 250Gi
+----
+
+NOTE: We're not advocating that you must use regional disks for Solr storage, as that would be redundant with Solr replication. We're just using this as an example of how to configure a custom storage class for Solr disks if you see the need. For instance, you could use regional disks without Solr replication for write-heavy type collections.
+
+[[node-pools]]
+=== Configure multiple node pools
+
+As discussed in the Workload Isolation with Multiple Node Pools section above, Lucidworks recommends isolating search workloads from analytics workloads using multiple node pools. You'll need to define multiple node pools for your cluster as our scripts do not do this for you; we do provide an example script for GKE, see link:https://github.com/lucidworks/fusion-cloud-native/blob/master/additional_environments/create_gke_cluster_node_pools.sh[create_gke_cluster_node_pools.sh^].
+
+In the custom values YAML file, you can add additional Solr StatefulSets by adding their names to the list under the `nodePools` property. If any property for that statefulset needs to be changed from the default set of values, then it can be set directly on the object representing the node pool, any properties that are omitted are defaulted to the base value. See the following example (additional whitespace added for display purposes only):
+
+[source,yaml]
+----
+solr:
+  nodePools:
+    - name: ""                      # Empty string "" is the suffix for the default partition
+
+    - name: "analytics"             # Override settings for analytics Solr pods
+      javaMem: "-Xmx6g"
+      replicaCount: 6
+      storageSize: "100Gi"
+      nodeSelector:                 # Assign analytics Solr pods to the node pool
+        fusion_node_type: analytics # with label fusion_node_type=analytics
+      resources:
+        requests:
+          cpu: 2
+          memory: 12Gi
+        limits:
+          cpu: 3
+          memory: 12Gi
+    - name: "search"                # Override settings for search Solr pods
+      javaMem: "-Xms11g -Xmx11g"
+      replicaCount: 12
+      storageSize: "50Gi"
+      nodeSelector:                 # Assign search Solr pods to the node pool
+        fusion_node_type: search    # with label fusion_node_type=search
+      resources:
+        limits:
+          cpu: "7700m"
+          memory: "26Gi"
+        requests:
+          cpu: "7000m"
+          memory: "25Gi"
+  nodeSelector:                                 # Default settings for all Solr pods if not
+    cloud.google.com/gke-nodepool: default-pool # specifically overridden in the nodePools section above
+...
+----
+
+In the above example the analytics partition will have 6 replicas (Solr pods), but the search nodepool would have 12 replicas. Each nodepool would automatically be assigned the property of `-Dfusion_node_type=<search/system/analytics>` which matches the name of the nodePool. The empty nodePool name `""` just maps to the default settings / node pool if not specifically overridden; please leave the `""` node pool as-is.
+
+The Solr pods will have a `fusion_node_type` system property set on them as shown below:
+
+image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/fusion_node_type.png?raw=true[]
+
+You can use the `fusion_node_type` property in Solr auto-scaling policies to govern replica placement during collection creation.
+
+[[solr-autoscaling]]
+=== Solr auto-scaling configuration
+
+Auto-scaling with solr 9 is achieved by configuration of Affinity Replica Placement Plugin that is extended by 'policies' element and 'strictPolicy' boolean.
+
+Each policy is identified by a unique policy name and a map of replica type (key) to suitable node type(s) as a comma-separated list.
+
+Solr node type is obtained from its system property node_type, which may contain a list of comma-separated node types that this Solr node supports, for example -Dnode_type=search,analytics.
+
+Boolean flag strictPolicy controls the leniency of the plugin for misconfigurations. When strictPolicy: false (default) the policy constraints for non-existent policies are simply ignored. Also, if no nodes can satisfy the placement for a given replica type then all eligible nodes will be allowed (still honoring other constraints). When strictPolicy: true misconfigurations such as an unknown policy or not enough eligible nodes due to filtering by node type will cause a PlacementException and the placement request will fail.
+
+NOTE: replica types are all lower-case names of supported replica types, i.e. one of nrt, tlog or pull.
+
+It can be configured in the custom values YAML file under the `fusion-admin` section as shown in the below example:
+[source,yaml]
+----
+fusion-admin:
+  ...
+  solrAutocalingPolicyJson:
+    {
+      "minimalFreeDiskGB": 20,
+      "prioritizedFreeDiskGB": 200,
+      "withCollections": {
+      },
+      "collectionNodeType": {
+        "test-collection" : "example-node-type"
+      },
+      "policies": {
+        "system": {
+          "*": "system"
+        },
+        "search": {
+          "nrt": "search",
+          "tlog": "search",
+          "pull": "analytics,search"
+        },
+        "analytics": {
+          "*": "analytics"
+        }
+      },
+      "strictPolicy": false
+    }
+----
+
+In the example above, direct children of the policies element are policy names which matches the collections' custom property property.policy. Each policy contains a set of replica types as keys and comma-separated solr node types as values. A special value of * is used to define placement policy for any replica type.
+Each policy is identified by a unique policy name and a map of replica type (key) to suitable node type(s) as a comma-separated list.
+
+[[network-policy]]
+=== Pod network policy
+
+A Kubernetes network policy governs how groups of pods are allowed to communicate with each other and other network endpoints. With Fusion, it's expected that all incoming traffic flows through the API Gateway service. Moreover, all Fusion services in the same namespace expect an internal JWT to be included in the request, which is supplied by the Gateway. Consequently, Fusion services enforce a basic level of API security and do not need an additional network policy to protect them from other pods in the cluster.
+
+To install the network policy for Fusion services, pass `--set global.networkPolicyEnabled=true` when installing the Fusion Helm chart.
+
+[[private-registry]]
+=== On-premises Private Docker Registries
+
+For on-premises Kubernetes deployments, your organization may not allow Kubernetes to pull Fusion's Docker images from DockerHub (https://hub.docker.com/u/lucidworks/).
+If this is the case, then you need to transfer the public images from DockerHub over to your private Docker registry.
+
+Here's a rough outline of the process we recommend, but you may need to adapt the process to work within your organization's security policies:
+
+[loweralpha]
+. You'll need a workstation that has access to DockerHub (hub.docker.com) and can connect to your internal Docker registry, most likely via VPN connection. We'll refer to this computer as `envoy`.
+
+. Install Docker on `envoy`. You'll need at least 100GB of free disk for Docker.
+
+. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). 
++
+You can get a list of images from a Helm Chart with:
++
+```
+brew install python-yq
+```
++
+On a non-Mac, use python3
++
+```
+pip3 install yq
+```
++
+Then
++
+```
+helm template <repo/chart> | yq '..|.image? | select(.)' | sort | uniq
+```
++
+Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
++
+```
+apachepulsar/pulsar-all:2.5.0
+argoproj/argoui:v2.4.3
+argoproj/workflow-controller:v2.4.3
+bitnami/kubectl:1.15-debian-9
+busybox:1.31.1
+busybox:latest
+curlimages/curl:7.68.0
+docker.io/seldonio/seldon-core-operator:1.0.1
+grafana/grafana:6.6.2
+jimmidyson/configmap-reload:v0.3.0
+lucidworks/admin-ui:5.1.1
+lucidworks/api-gateway:5.1.1
+lucidworks/auth-ui:5.1.0
+lucidworks/classic-rest-service:5.1.1
+lucidworks/devops-ui:5.1.0
+lucidworks/fusion-api:5.1.1
+lucidworks/fusion-indexing:5.1.1
+lucidworks/fusion-logstash:5.1.0
+lucidworks/insights:5.1.0
+lucidworks/job-launcher:5.1.1
+lucidworks/job-rest-server:5.1.1
+lucidworks/ml-model-service:5.1.0
+lucidworks/ml-python-image:5.1.0
+lucidworks/pm-ui:5.1.0
+lucidworks/query-pipeline:5.1.1
+lucidworks/rest-service:5.1.1
+lucidworks/rpc-service:5.1.1
+lucidworks/rules-ui:5.1.0
+lucidworks/webapps:5.1.0
+prom/prometheus:v2.16.0
+prom/pushgateway:v1.0.1
+quay.io/coreos/kube-state-metrics:v1.9.5
+quay.io/datawire/ambassador:0.86.1
+seldonio/seldon-core-operator:1.0.1
+solr:8.4.1
+zookeeper:3.5.6
+```
++
+For example, to pull the query pipeline image, you would do:
++
+```
+docker pull lucidworks/query-pipeline:5.1.1
+```
++
+See `docker pull --help` for more information about pulling Docker images.
+
+. Establish connection from `envoy` to the private Docker registry, most likely this requires you to open a VPN connection. Consult with your internal IT support for help as needed.
++
+We'll refer to the private Docker registry as `<internal-private-registry>` in the steps below.
+
+. Push images from envoy’s Docker registry into their private registry (will take a long time).
++
+You'll need to re-tag all images for the internal registry. For example, to tag the query-pipeline image, you would do:
++
+```
+docker tag lucidworks/query-pipeline:5.1.1 <internal-private-registry>/query-pipeline:5.1.1
+```
++
+After tagging, push each image to the internal repo, e.g.:
++
+```
+docker push <internal-private-registry>/query-pipeline:5.1.1
+```
+
+. Install the Docker registry secret into Kubernetes.
++
+For background on pulling images from private registries, see: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
++
+You'll need to create docker-registry secret in the Kubernetes namespace where you want to install Fusion using a command similar to:
++
+```
+SECRET_NAME=<internal-private-secret>
+REPO=<internal-private-registry>
+
+kubectl create secret docker-registry "${SECRET_NAME}" \
+  --namespace "${NAMESPACE}" \
+  --docker-server="${REPO}" \
+  --docker-username=${REPO_USER} \
+  --docker-password=${REPO_PASS} \
+  --docker-email=${REPO_USER}
+```
+
+. Update the custom values yaml for your cluster to point to your private registry and secret for Kubernetes to pull images.
++
+For instance:
++
+[source,yaml]
+```
+query-pipeline:
+  image:
+    imagePullSecrets:
+      - name: <internal-private-secret>
+    repository: <internal-private-registry>
+```
++
+Do this for all Fusion services.
+
+. Customize Helm Chart
++
+All the Fusion services allow you to override the `imagePullSecrets` setting using custom values yaml, but other 3rd party services such as Zookeeper, Pulsar, Prometheus,
+and Grafana do not allow you to supply the pull secret using custom values yaml. Consequently, we recommend patching the default service account for your namespace to add the pull secret:
++
+```
+kubectl patch sa default -n $NAMESPACE \
+  -p '"imagePullSecrets": [{"name": "<internal-private-secret>" }]'
+```
++
+IMPORTANT: Be sure to replace `<internal-private-secret>` with the name of the secret you created in step above.
+
+This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
+
+[[custom-certs]]
+=== Add custom certificates (optional)
+
+You can add arbitrary certificates to connectors. This may be helpful if you need to crawl a datasource which for some reason is using a self-signed certificate.
+
+[source,yaml]
+----
+# Additional certificates to be imported into truststore used by the classic connectors
+classic-rest-service:
+  trustedCertificates:
+    enabled: true
+    files:
+      some.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE-----
+      other.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE---------
+# And v2 connector plugins
+connector-plugin-service:
+  trustedCertificates:
+    enabled: true
+    files:
+      some.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE-----
+      other.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE---------
+----
+
+[[install]]
+=== Install Fusion 5 on Kubernetes
+
+At this point, you're ready to install Fusion 5 using your custom values YAML file(s) and upgrade script.
+
+If you used the `customize_fusion_values.sh` script, then simply run it using BASH on the command-line, For instance:
+
+[source,bash]
+----
+./gke_search_f5_upgrade_fusion.sh
+----
+
+Once the install completes, refer to the Verifying the Fusion Installation steps to verify your Fusion installation is running correctly.
+
+[[monitoring-alerting]]
+=== Install Prometheus and Grafana
+
+Lucidworks recommends using Prometheus and Grafana for monitoring the performance and health of your Fusion cluster. Your ops team may already have these services installed. If not, you can install them into the Fusion namespace.
+
+The `--prometheus true` option shown link:#custom-values[above] activates the Solr metrics exporter service and adds pod annotations so that Prometheus can scrape metrics from Fusion services. When you run the script with this option, it creates an additional custom value YAML file for installing Prometheus and Grafana:
+
+* `<provider>_<cluster>_<namespace>_monitoring_values.yaml`, such as `gke_search_f5_monitoring_values.yaml`
+
+. Commit this file to version control, if you haven't already.
+. Review its contents to ensure that the settings suit your needs.
++
+For example, decide how long you want to keep metrics; the default is 36h.
++
+See the link:https://github.com/helm/charts/tree/master/stable/prometheus[Prometheus documentation^].
++
+See the link:link:https://github.com/helm/charts/tree/master/stable/grafana[Grafana documentation^].
+
+To install Prometheus & Grafana in your namespace, run the `install_prom.sh` script, passing the provider, cluster name and namespace, such as:
+
+[source,bash]
+----
+./install_prom.sh --provider gke -c search -n f5
+----
+TIP: Pass the `--help` parameter to see script usage details.
+
+The Grafana dashboards from link:https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/grafana[monitoring/grafana^] are installed automatically by the `install_prom.sh` script.
+
+// end::body[]

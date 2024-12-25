@@ -1,0 +1,22 @@
+apiVersion: v2
+name: fusion-monitoring
+version: 1.0.1
+appVersion: 1.0.1
+description: A helm chart to install Prometheus and Grafana for monitoring Lucidworks Fusion
+keywords:
+  - prometheus
+  - grafana
+maintainers:
+  - email: ian.thebridge@lucidworks.com
+    name: Ian Thebridge
+dependencies:
+- name: prometheus
+  version: 20.0.1
+  repository: https://prometheus-community.github.io/helm-charts
+  tags:
+    - prometheus
+- name: grafana
+  version: 6.52.4
+  repository: https://grafana.github.io/helm-charts
+  tags:
+    - grafana

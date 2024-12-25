@@ -1,0 +1,997 @@
+= Fusion Cloud Native on Kubernetes
+:toc:
+:toclevels: 4
+:toc-title:
+:migration-guide: https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations
+
+This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The scripts provide an option to create Kubernetes clusters that are suitable for demo / proof-of-concept purposes only.
+We assume that you'll want to control how your production clusters are provisioned, secured, and managed, as these are typically concerns we're not able to script for you.
+
+// tag::body[]
+
+// tag::releases[]
+
+=== Helm Chart Releases
+[width="100%",cols="1,2,7",options="header"]
+|=========================================================
+|Version|Date|Notes
+|5.9.4|2024-06-25|Fusion 5.9.4 release, see official https://doc.lucidworks.com/fusion/5.12/kgbb0r/fusion-5-9-4[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.12.0|2024-03-28|Fusion 5.12.0 release, see official https://doc.lucidworks.com/fusion/5.12/2sq5ks/fusion-5-12-0[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.9.3|2024-02-26|Fusion 5.9.3 release, see official https://doc.lucidworks.com/fusion/5.9/lqgbgi/fusion-5-9-3[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.11.0|2024-01-03|Fusion 5.11.0 release, see official https://doc.lucidworks.com/fusion/5.11/dmayvi/fusion-5-11-0[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.9.2|2023-12-12|Fusion 5.9.2 release, see official https://doc.lucidworks.com/fusion/5.9/39hg5n/fusion-5-9-2[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.10.0|2023-09-28|Fusion 5.10.0 release, see official https://doc.lucidworks.com/fusion/5.10/ce6szc/fusion-5-10-0[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.9.1|2023-09-05|Fusion 5.9.1 release, see official https://doc.lucidworks.com/fusion/5.9/ht2sax/fusion-5-9-1[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.9.0|2023-06-29|Fusion 5.9.0 release, see official http://doc.lucidworks.com/fusion/5.9/kpv8sh/fusion-5-9-0[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.8.1|2023-06-08|Fusion 5.8.1 release, see official https://doc.lucidworks.com/fusion/5.8/608v1q/fusion-5-8-1[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.8.0|2023-03-22|Fusion 5.8.0 release, see official https://doc.lucidworks.com/fusion/5.8/2k5m8y/fusion-5-8-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.7.1|2023-01-30|Fusion 5.7.1 release, see official https://doc.lucidworks.com/fusion/5.7/dvb7jr/fusion-5-7-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.7.0|2022-12-13|Fusion 5.7.0 release, see official https://doc.lucidworks.com/fusion/5.7/3c6x8l/fusion-5-7-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.6.0|2022-08-11|Fusion 5.6.0 release, see official https://doc.lucidworks.com/fusion/5.6/mme9fq/fusion-5-6-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.5.2|2022-05-31|Fusion 5.5.2 release, see official https://doc.lucidworks.com/fusion/5.5/k63wv1/fusion-5-5-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.5.1|2022-04-13|Fusion 5.5.1 release, see official https://doc.lucidworks.com/fusion/5.5/drg5sz/fusion-5-5-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.5.0|2022-03-18|Fusion 5.5.0 release, see official https://doc.lucidworks.com/fusion/5.5/301ya6/fusion-5-5-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.5|2021-12-17|Fusion 5.4.5 release, see official https://doc.lucidworks.com/fusion/5.4/20lnzz/fusion-5-4-5-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.4|2021-12-02|Fusion 5.4.4 release, see official https://doc.lucidworks.com/fusion/5.4/z3r8fr/fusion-5-4-4-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.3|2021-09-29|Fusion 5.4.3 release, see official https://doc.lucidworks.com/fusion/5.4/so9yqn/fusion-5-4-3-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.2|2021-06-17|Fusion 5.4.2 release, see official https://doc.lucidworks.com/fusion/5.4/xl26i1/fusion-5-4-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.1|2021-05-06|Fusion 5.4.1 release, see official https://doc.lucidworks.com/fusion/5.4/gzd3zh/fusion-5-4-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.0|2021-04-23|Fusion 5.4.0 release, see official https://doc.lucidworks.com/fusion/5.4/27f812/fusion-5-4-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.3.5|2021-03-08|Fusion 5.3.5 release, see official https://doc.lucidworks.com/fusion/5.3/11255/fusion-5-3-5-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.3.4|2021-02-12|Fusion 5.3.4 release, see official https://doc.lucidworks.com/fusion/5.3/11250/fusion-5-3-4-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.3.3|2021-02-04|Fusion 5.3.3 release, see official https://doc.lucidworks.com/fusion/5.3/10919/fusion-5-3-3-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.3.2|2020-12-14|Fusion 5.3.2 release, see official https://doc.lucidworks.com/fusion/5.3/10898/fusion-5-3-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.3.1|2020-12-11|Fusion 5.3.1 release, see official https://doc.lucidworks.com/fusion/5.3/10899/fusion-5-3-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.3.0|2020-11-17|Fusion 5.3.0 release, see official https://doc.lucidworks.com/fusion/5.3/10876/fusion-5-3-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.2.2|2020-10-20|Fusion 5.2.2 release, see official https://doc.lucidworks.com/fusion/5.3/10877/fusion-5-2-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.1.5|2020-10-20|Fusion 5.1.5 release, see official https://doc.lucidworks.com/fusion/5.3/10880/fusion-5-1-5-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.2.0|2020-08-18|Fusion 5.2.0 release, see official https://doc.lucidworks.com/fusion/5.3/10878/fusion-5-2-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.1.4|2020-06-25|Fusion 5.1.4 release, see official https://doc.lucidworks.com/fusion/5.3/10885/fusion-5-1-4-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.1.3|2020-06-18|Fusion 5.1.3 release, see official https://doc.lucidworks.com/fusion/5.3/10887/fusion-5-1-3-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.1.2|2020-05-14|Fusion 5.1.2 release, see official https://doc.lucidworks.com/fusion/5.3/10879/fusion-5-1-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide]. *IMPORTANT*: Fusion 5.1.2 *does not work* with Kubernetes version 1.17+ due to an issue introduced in Java 1.8.0_252 which prevents access to the K8s API service[release notes]. If you're running K8s 1.17+, please run Fusion 5.1.1 until 5.1.3 is released.
+|5.1.1|2020-04-08|Fusion 5.1.1 release, see official https://doc.lucidworks.com/fusion/5.3/10882/fusion-5-1-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.1.0|2020-03-12|Fusion 5.1.0 release, see official https://doc.lucidworks.com/fusion/5.3/10883/fusion-5-1-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.0.3-4|2020-02-26|Updated query pipeline service to support filtering Solr pods by hostname regex match, e.g. `lw.nodeFilter=host:search` will send queries to Solr pods that contain "search" in their hostname. This is useful when using TLOG and PULL replica types where you don’t want queries to go to nodes hosting TLOG replicas and only want to target PULL replicas.
+|5.0.3-3|2020-02-19|Updated `apiVersion` to `apps/v1` for the logstash statefulset to support Kubernetes v1.17+. If you're running previous versions of the Fusion 5 Helm chart, you will need to delete the logstash statefulset before upgrading to `5.0.3-3` (or beyond); `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation does not delete the PVC, so the data will remain intact.
+|5.0.3-2|2020-01-23|Improved accuracy of histogram metrics reported for query pipelines. Improved the ML model service Helm chart to allow easier overriding of the Python sidecar image.
+|5.0.3-1|2020-01-08|Update `webapps` service to correctly deploy AppStudio WAR files
+|5.0.2|2019-12-18|Fusion 5.0.2 release, see official https://doc.lucidworks.com/fusion/5.3/10886/fusion-5-0-2-release-notes[release notes]. Please be sure to upgrade to Helm v3 for installing Fusion 5.0.2.
+|=========================================================
+
+__Please update the `CHART_VERSION` in the upgrade script for your cluster to point at the latest version of the Helm chart.__
+
+// end::releases[]
+
+// tag::prerequisites[]
+== Prerequisites
+
+This section covers prerequisites and background knowledge needed to help you understand the structure of this document and how the Fusion installation process works with Kubernetes.
+
+=== Release Name and Namespace
+
+Before installing Fusion, you need to choose a https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
+Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster *in separate namespaces*.
+However, please [.underline]#do not# install more than one Fusion release in the same namespace.
+
+__NOTE: All Fusion services must run in the same namespace, i.e. you should not try to split a Fusion cluster across multiple namespaces.__
+
+Use a short name for the namespace, containing only letters, digits, or dashes (no dots or underscores). The setup scripts in this repo use the namespace for the Helm release name by default.
+
+=== Install Helm
+
+Helm is a package manager for Kubernetes that helps you install and manage applications on your Kubernetes cluster.
+Regardless of which Kubernetes platform you're using, you need to install *`helm`* as it is required to install Fusion for any K8s platform.
+On MacOS, you can do:
+```
+brew install kubernetes-helm
+```
+If you already have helm installed, make sure you're using the latest version:
+```
+brew upgrade kubernetes-helm
+```
+For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
+
+The Fusion helm chart requires that helm is greater than version `3.0.0`; check your Helm version by running `helm version --short`.
+
+==== Helm User Permissions
+
+If you require that fusion is installed by a user with minimal permissions, instead of an admin user, then the role and cluster role that will have to be assigned to the user within the namespace that you wish to install fusion in are documented in the `install-roles` directory.
+
+[NOTE]
+When working with Kubernetes on the command-line, it's useful to create a shell alias for `kubectl`, e.g.:
+```
+alias k=kubectl
+```
+
+To use these role in a cluster, as an admin user first create the namespace that you wish to install fusion into:
+```
+k create namespace fusion-namespace
+```
+Apply the `role.yaml` and `cluster-role.yaml` files to that namespace
+
+```
+k apply -f cluster-role.yaml
+k config set-context --current --namespace=$NAMESPACE
+k apply -f role.yaml
+```
+
+Then bind the rolebinding and clusterolebinding to the install user:
+
+```
+k create --namespace fusion-namespace rolebinding fusion-install-rolebinding --role fusion-installer --user <install_user>
+k create clusterrolebinding fusion-install-rolebinding --clusterrole fusion-installer --user <install_user>
+```
+
+You will then be able to run the `helm install` command as the `<install_user>`
+
+=== Clone fusion-cloud-native from Github
+
+You should clone this repo from github as you'll need to run the scripts on your local workstation:
+```
+git clone https://github.com/lucidworks/fusion-cloud-native.git
+```
+
+You should get into the habit of pulling this repo for the latest changes before performing any maintenance operations on your Fusion cluster to ensure you have the latest updates to the scripts.
+```
+cd fusion-cloud-native
+git pull
+```
+
+Cloning the github repo is preferred so that you can pull in updates to the scripts, but if you are not a git user, then you can download the project: https://github.com/lucidworks/fusion-cloud-native/archive/master.zip.
+Once downloaded, extract the zip and cd into the `fusion-cloud-native-master` directory.
+
+// end::prerequisites[]
+
+== Google Kubernetes Engine (GKE)
+
+// tag::gke[]
+
+The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] provided in this repo is strictly optional.
+The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
+If you're already familiar with K8s, Helm, and GKE, then you can skip the script and just use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
+
+[[sdk-setup]]
+=== Set up the Google Cloud SDK (one time only)
+
+If you've already installed the `gcloud` command-line tools, you can skip to <<cluster-create,Create a Fusion cluster in GKE>>.
+
+These steps set up your local Google Cloud SDK environment so that you're ready to use the command-line tools to manage your Fusion deployment.
+
+Usually, you only need to perform these setup steps once.  After that, you're ready to link:#cluster-create[create a cluster].
+
+For a nice getting started tutorial for GKE, see: https://cloud.google.com/kubernetes-engine/docs/deploy-app-cluster[Deploy an app to a GKE cluster^].
+
+.How to set up the Google Cloud SDK
+. https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine[Enable the Kubernetes Engine API^].
+. Log in to Google Cloud: `gcloud auth login`
+. Set up the Google Cloud SDK:
+.. `gcloud config set compute/zone <zone-name>`
++
+If you are working with regional clusters instead of zone clusters, use `gcloud config set compute/region <region-name>` instead.
+.. `gcloud config set core/account <email address>`
+.. _New GKE projects only:_ `gcloud projects create <new-project-name>`
++
+If you have already created a project, for example in the https://console.cloud.google.com/[Google Cloud Platform console^], then skip to the next step.
+.. `gcloud config set project <project-name>`
+
+Make sure you install the Kubernetes command-line tool `kubectl` using:
+```
+gcloud components install kubectl
+gcloud components update
+```
+
+[[cluster-create]]
+=== Create a single-node demo cluster
+
+Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new, single-node *demo* cluster and install Fusion, simply do:
+```
+./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> --create demo
+```
+
+Use the `--help` option to see script usage. If you want the script to create a cluster for you, then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+
+If you pass `--create demo` to the script, then we create a single node GKE cluster (defaults to using `n1-standard-8` node type). The minimum node type you'll need for a 1 node cluster is an `n1-standard-8` (on GKE) which has 8 CPU and 30 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.1 but is not sufficient for production workloads.
+
+You can change the instance type using the `-i` parameter; see: https://cloud.google.com/compute/docs/regions-zones/#available for an list of which machine types are available in your desired region.
+
+__Note: If not provided the script generates a custom values file named `gke_<cluster>_<namespace>_fusion_values.yaml` which you can use to customize the Fusion chart.__
+
+#WARNING# If using Helm V2, the `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
+
+If you see an error similar to the following, then wait a few seconds and try running the `setup_f5_gke.sh` script again with the same arguments as this is usually a transient issue:
+```
+Error: could not get apiVersions from Kubernetes: unable to retrieve the complete list of server APIs: metrics.k8s.io/v1beta1: the server is currently unable to handle the request
+```
+
+After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+
+When you're ready to deploy Fusion to a production-like environment, see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
+
+=== Create a three-node regional cluster to withstand a zone outage
+
+With a three-node regional cluster, nodes are deployed across three separate availability zones.
+
+```
+./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create multi_az
+```
+--
+* `<cluster>` value should be the name of a non-existent cluster; the script will create the new cluster.
+* `<project>` must match the name of an existing project in GKE. Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
+* `<namespace>` Kubernetes namespace to install Fusion into, defaults to `default` with release `f5`
+* `<region-name>` value should be the name of a GKE region, defaults to `us-west1`. Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
+--
+In this configuration, Kubernetes deploys a ZooKeeper and Solr pod on each of the three nodes, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
+
+When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
+
+After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+
+When you're ready to deploy Fusion to a production-like environment, see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
+
+==== GKE Ingress and TLS
+
+The Fusion proxy service provides authentication and serves as an API gateway for accessing all other Fusion services.
+It's typical to use an Ingress for TLS termination in front of the proxy service.
+
+The `setup_f5_gke.sh` supports creating an Ingress with an TLS cert for a domain you own by passing: `-t -h <hostname>`
+
+After the script runs, you need to create an A record in GCP's DNS service to map your domain name to the Ingress IP. Once this occurs, our script setup uses https://letsencrypt.org/[Let's Encrypt] to issue a TLS cert for your Ingress.
+
+To see the status of the Let's Encrypt issued certificate, do:
+```
+kubectl get managedcertificates -n <namespace> -o yaml
+```
+
+Please refer to the Kubernetes documentation on configuring an Ingress for GKE: https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer[Setting up HTTP Load Balancing with Ingress]
+
+NOTE: The GCP Ingress defaults to a 30 second timeout, which can lead to false negatives for long running requests such as importing apps. To configure the timeout for the backend in kubernetes:
+
+Create a BackendConfig object in your namespace:
+
+```
+---
+apiVersion: cloud.google.com/v1beta1
+kind: BackendConfig
+metadata:
+  name: backend_config_name
+spec:
+  timeoutSec: 120
+  connectionDraining:
+    drainingTimeoutSec: 60
+```
+
+Then make sure that the following entries are in the right place in your values.yaml file:
+
+```
+api-gateway:
+  service:
+    annotations:
+      beta.cloud.google.com/backend-config: '{"ports": {"6764":"backend_config_name"}}'
+```
+
+and upgrade your release to apply the configuration changes
+
+
+==== Ingresses and externalTrafficPolicy
+
+When running a fusion cluster behind an externally controlled LoadBalancer it can be advantageous
+to configure the `externalTrafficPolicy` of the `proxy` service to `Local`. This preserves the client
+source IP and avoids a second hop for LoadBalancer and NodePort type services, but risks potentially
+imbalanced traffic spreading. Although when running in a cluster with a dedicated pool for spark jobs
+that can scale up and down freely it can prevent unwanted request failures. This behaviour can be
+altered with the `api-gateway.service.externalTrafficPolicy` value, which is set to `Local` if the example values
+file is used.
+
+__You must use `externalTrafficPolicy`=`Local` for the Trusted HTTP Realm to work correctly.__
+
+
+If you are already using a custom 'values.yaml' file, create an entry for `externalTrafficPolicy` under `api-gateway` service.
+
+```
+api-gateway:
+  service:
+    externalTrafficPolicy: Local
+```
+
+==== Considerations when using the nginx ingress controller
+
+If you are using the `nginx` ingress controller to fulfil your ingress definitions there are a couple
+of options that are recommended to be set in the configmap:
+
+```
+enable-underscores-in-headers: "true"   # Fusion can return some headers that have underscores, these have to be explicitly enabled in nginx
+proxy-body-size: "0"        # By default nginx places a maximum size on request bodies, either increase as needed or disable by setting to 0
+proxy-read-timeout: "300"   # Increases the timeout for potential slow queries.
+```
+==== Custom values
+
+There are some example values files that can be used as a starting point for
+resources, affinity and replica count configuration in the `example-values` folder.
+These can be passed to the install script using the `--values` option, for example:
+```
+./setup_f5_gke.sh -c <cluster> -p <project> -r <release> -n <namespace> \
+  --values example-values/affinity.yaml --values example-values/resources.yaml --values example-values/replicas.yaml
+```
+The `--values` option can be passed multiple times, if the same configuration property is contained within multiple `values` files then the values from the latest file passed as a `--values` option are used.
+
+
+// tag::connectors-values[]
+===== Connectors custom values
+
+If you are using Fusion 5.9 or later, you can specify resources and replica count per connector. This allows you to set different resource limits for each connector. If you do not set custom values for a connector, that connector uses the default values.
+
+Set each connector's resource values in the `connector-plugin` section under `pluginValues`. The `pluginValues` section is a list of plugins and its resources. The following sample shows an example.
+
+```
+ pluginValues:
+   - id: "plugin-id" <1>
+     resources: <2>
+       limits:
+         cpu: "2"
+         memory: "3Gi"
+       requests:
+         cpu: "250m"
+         memory: "2Gi"
+     replicaCount: 1 <3>
+```
+
+<1> The plugin ID. The plugin ID must match the plugin ID on the plugin ZIP file. without the `lucidworks.` prefix. For example, if the plugin ID on the plugin ZIP file is `lucidworks.sharepoint-optimized`, the plugin ID is `sharepoint-optimized`.
+
+<2> The resources settings. You may specify the limits, the requests, and the CPU and memory for each.
+
+<3> The number of replicas per connector. This value is 1 by default.
+
+*IMPORTANT* After editing the `connector-plugin` section, you must reinstall the affected connector.
+
+// end::connectors-values[]
+
+==== Upgrades and Ingress
+
+*IMPORTANT* If you used the `-t -h <hostname>` options when installing your cluster, our script created an additional values yaml file named `tls-values.yaml`.
+
+To make things easier for you when upgrading, you should add the settings from this file into your main custom values yaml file, e.g.:
+```
+api-gateway:
+  service:
+    type: "NodePort"
+  ingress:
+    enabled: true
+    host: "<hostname>"
+    tls:
+      enabled: true
+    annotations:
+      "networking.gke.io/managed-certificates": "<RELEASE>-managed-certificate"
+      "kubernetes.io/ingress.class": "gce"
+```
+This way you don't have to remember to pass the additional `tls-values.yaml` file when upgrading.
+
+// end::gke[]
+
+=== Upgrade Fusion on GKE
+
+// tag::upgrade-gke[]
+
+Before you begin, please consult the {migration-guide}[Migration Guide].
+
+During installation, the setup script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
+
+In addition, the setup script creates a helper upgrade script to streamline the upgrade process. Look in the directory where you ran the setup script initially for a file named:
+
+```
+gke_<cluster>_<release>_upgrade_fusion.sh
+```
+where `<release>` is typically the same as your namespace unless you overrode the default value using the `-r` option.
+
+After running the upgrade, use `kubectl get pods` to see the changes being applied to your cluster. It may take several minutes to perform the upgrade as new Docker images need to be pulled from DockerHub.
+To see the versions of running pods, do:
+```
+kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
+```
+
+// end::upgrade-gke[]
+
+=== ML Model Service Permissions
+
+// tag::ml-gke-permissions[]
+
+A user must grant permissions to the Google service account so the ML Model Service can use Google Cloud Storage. This way you can always reference your model even if nodes are created or destroyed as part of cluster scaling.
+
+Grant the default service account read/write access to a GCS bucket by upgrading with these changes: 
+
+To get the service account, do:
+
+```
+gcloud iam service-accounts list | grep 'default service' | grep compute
+```
+
+In the values.yaml, provide:
+
+```
+ml-model-service:
+  modelRepoImpl: gcs
+  gcsBucketName: <GCS_BUCKET_NAME>
+  gcsBaseDirectoryName: dev
+```
+
+// end::ml-gke-permissions[]
+
+== Amazon Elastic Kubernetes Service (EKS)
+
+// tag::eks[]
+
+The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] provided in this repo is strictly optional.
+The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
+If you're already familiar with K8s, Helm, and EKS, then you use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
+
+If you're new to Amazon Web Services (AWS), then please visit the Amazon Web Services https://aws.amazon.com/getting-started/[Getting Started Center] to set up an account.
+
+If you're new to Kubernetes and EKS, then we recommend going through Amazon's https://eksworkshop.com/introduction/[EKS Workshop] before proceeding with Fusion.
+
+[[eks-setup]]
+=== Set up the AWS CLI tools
+
+Before launching an EKS cluster, you need to install and configure `kubectl`, `aws`, `eksctl`, `aws-iam-authenticator` using the links provided below:
+
+.Required AWS Command-line Tools:
+. kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/[Install kubectl]
+. aws: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html[Installing the AWS CLI]
+. eksctl: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html[Getting Started with eksctl]
+. aws-iam-authenticator: https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html[AWS IAM Authenticator for Kubernetes]
+
+Run `aws configure` to configure a profile for authenticating to AWS. You'll use the profile name you configure in this step, which defaults to `default`, as the `-p` argument to the `setup_f5_eks.sh` script in the next section.
+
+NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative sources can have different versions that could cause command failures. Also, always make sure you are using the latest version for each one of the required tools.
+
+[[eks-cluster-create]]
+=== Set up Fusion on EKS
+
+To create a cluster in EKS the following IAM policies are required:
+
+* AmazonEC2FullAccess
+* AWSCloudFormationFullAccess
+
+.EKS Permissions
+|===
+
+| eks:DeleteCluster | eks:UpdateClusterVersion | eks:ListUpdates | eks:DescribeUpdate
+
+| eks:DescribeCluster | eks:ListClusters | eks:CreateCluster |  |
+
+|===
+
+.VPC Permissions
+|===
+
+| ec2:DeleteSubnet | ec2:DeleteVpcEndpoints | ec2:CreateVpc | ec2:AttachInternetGateway
+
+| ec2:DetachInternetGateway | ec2:DisassociateSubnetCidrBlock | ec2:DescribeVpcAttribute | ec2:AssociateVpcCidrBlock
+
+| ec2:ModifySubnetAttribute | ec2:DisassociateVpcCidrBlock | ec2:CreateVpcEndpoint | ec2:DescribeVpcs
+
+| ec2:CreateInternetGateway | ec2:AssociateSubnetCidrBlock | ec2:ModifyVpcAttribute | ec2:DeleteInternetGateway
+
+| ec2:DeleteVpc | ec2:CreateSubnet | ec2:DescribeSubnets | ec2:ModifyVpcEndpoint
+
+|===
+
+
+.IAM Permissions
+|===
+
+| iam:CreateInstanceProfile | iam:DeleteInstanceProfile | iam:GetRole | iam:GetPolicyVersion
+
+| iam:UntagRole | iam:GetInstanceProfile | iam:GetPolicy | iam:TagRole
+
+| iam:RemoveRoleFromInstanceProfile | iam:DeletePolicy | iam:CreateRole | iam:DeleteRole
+
+| iam:AttachRolePolicy | iam:PutRolePolicy | iam:ListInstanceProfiles | iam:AddRoleToInstanceProfile
+
+| iam:CreatePolicy | iam:ListInstanceProfilesForRole | iam:PassRole | iam:DetachRolePolicy
+
+| iam:DeleteRolePolicy | iam:CreatePolicyVersion | iam:GetRolePolicy | iam:DeletePolicyVersion
+
+|===
+
+Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] to install Fusion 5.x in an EKS cluster. 
+
+NOTE: This script does not support multiple node pools and should not be used for production clusters.
+
+* To create a new cluster and install Fusion, run the following command:
++
+[source,bash]
+----
+./setup_f5_eks.sh -c my-eks-cluster -p profile-name -n fusion-namespace --create demo 
+----
++
+** Replace `my-eks-cluster`, `profile-name`, and `fusion-namespace` with your cluster, profile, and namespace values.
+** Pass the `--create` option with either `demo` or `multi_az`.
+* To use an existing cluster and install Fusion, run the following command:
++
+[source,bash]
+----
+./setup_f5_eks.sh -c cluster-name -p profile-name
+----
++
+** Replace `cluster-name` with the name of the cluster you already created.
+** Replace `profile-name` with the name of your profile.
+
+The profile is automatically set to `default` if you ran the AWS configure command without giving the profile a name.
+
+Use the `--help` option to see full script usage.
+
+WARNING: If using Helm V2, the `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
+
+WARNING: The `setup_f5_eks.sh` script creates a service account that provides S3 read-only permissions to the created pods.
+
+After running the `setup_f5_eks.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+
+==== EKS cluster overview
+
+The EKS cluster is created using `eksctl` (https://eksctl.io/). By default it will setup the following resources in your AWS account:
+
+- A dedicated VPC for the EKS cluster in the specified region with CIDR: `192.168.0.0/16`
+- 3 Public and 3 Private subnets within the created VPC, each with a `/19` CIDR range, along with the corresponding route tables.
+- A NAT gateway in each Public subnet
+- An Auto Scaling Group of the instance type specified by the script, which defaults to `m5.2xlarge`, with 3 instances spanning the public subnets.
+
+See https://eksctl.io/usage/vpc-networking/ for more information on the networking setup.
+
+==== EKS Ingress
+
+The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external DNS name provided by an ELB over HTTP. This is done for demo or getting started purposes. However, you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
+See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
+
+Our EKS script creates a classic ELB for exposing fusion proxy service. In case you need to change this behavior and use https://github.com/kubernetes-sigs/aws-load-balancer-controller[AWS Load Balancer Controller^] instead you can use the following parameters when  running the `setup_f5_eks.sh` script:
+
+```
+--deploy-alb     # Tells the script to deploy an ALB
+```
+
+By default the `kube-system` namespace is being used for installing the `aws-load-balancer-controller` because pods `priorityClassName` is set to `system-cluster-critical`.
+
+In case you need to deploy an internal ALB you can use the `--internal-alb` option. This will create the nodes in the internal subnets. Fusion will be reachable from an AWS instance located in any of the external subnets on the same VPC. To use an ALB also an ingress with a DNS name is required, you can use the `-h` option to create an ingress with the required DNS name.
+
+Finally, use Route 53 or your DNS provider for creating an A ALIAS DNS record for your DNS name pointing to the ingress ADRESS. You can get the address listing the ingress using the command `kubectl get ing`.
+
+
+// end::eks[]
+
+=== Upgrade Fusion on EKS
+
+// tag::upgrade-eks[]
+
+Before you begin, please consult the {migration-guide}[Migration Guide].
+
+To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
+
+```
+eks_<cluster>_<release>_upgrade_fusion.sh
+```
+// end::upgrade-eks[]
+
+// tag::eks[]
+=== Provide access to the EKS cluster to other users
+
+Initially, only the user that created the Amazon EKS cluster has `system:masters` permissions to configure the cluster. In order to extend the permissions, a `ConfigMap` should be created to allow access to IAM users or roles.
+
+For providing these permissions, use the following yaml file as a template, replacing the required values:
+
+aws-auth.yaml
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: <node_instance_role_arn>
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+  mapUsers: |
+    - userarn: arn:aws:iam::<account_id>:user/<username>
+      username: <username>
+      groups:
+        - system:masters
+```
+
+Use the following command for applying the yaml file: `kubectl apply -f aws-auth.yaml`
+
+=== Remove EKS cluster
+
+In case you have deployed an ALB ingress controller, you would need to remove the policy that was created for managing the ALB before removing the cluster. You can use the following command for it:
+
+```
+aws iam --profile <profile-name> delete-policy --policy-arn arn:aws:iam::<account_id>:policy/eksctl-<cluster-name>-alb-policy
+```
+
+Also you can remove it manually using the https://console.aws.amazon.com/iam/home?region=us-west-2#/policies[AWS IAM console], searching for `eksctl-<cluster-name>-alb-policy`.
+
+After that you should remove the ALB with `helm delete`, list the current releases with `helm list`.
+
+The EKS cluster is created using Cloudformation stacks so you need to remove them to delete the cluster, you can check them in the https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks?filteringText=&filteringStatus=active&viewNested=true&hideStacks=false[AWS Cloudformation Console], check for the following stacks:
+
+- eksctl-<cluster-name>-nodegroup-standard-workers
+- eksctl-<cluster-name>-cluster
+
+The `eksctl-<cluster-name>-nodegroup-standard-workers` stack should be the first to be removed. After that we can remove the `eksctl-<cluster-name>-cluster` stack.
+
+Also you can use the following commands>:
+```
+aws cloudformation --profile <profile-name> delete-stack --stack-name eksctl-<cluster-name>-nodegroup-standard-workers
+aws cloudformation --profile <profile-name> delete-stack --stack-name eksctl-<cluster-name>-cluster
+
+```
+
+// end::eks[]
+
+== Azure Kubernetes (AKS)
+
+// tag::aks[]
+
+The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_aks.sh[`setup_f5_aks.sh` script^] provided in this repo is strictly optional.
+The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
+If you're already familiar with K8s, Helm, and AKS, then you use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
+
+If you're new to Azure, then please visit https://azure.microsoft.com/en-us/free/search/[^] to set up an account.
+
+[[aks-setup]]
+=== Set up the AKS CLI tools
+
+Before launching an AKS cluster, you need to install and configure `kubectl` and `az` using the links provided below:
+
+.Required AKS Command-line Tools:
+. `kubectl`: https://kubernetes.io/docs/tasks/tools/install-kubectl/[Install kubectl]
+. `az`: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest[Installing the Azure CLI]
+
+To confirm your account access and command-line tools are set up correctly, run the `az login` command (`az login –help` to see available options).
+
+=== Azure Prerequisites
+
+To launch a cluster in AKS (or pretty much do anything with Azure) you need to setup a Resource Group. Resource Groups are a way of organizing and managing related resources in Azure.
+For more information about resource groups, see https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview#resource-groups[^].
+
+You also need to choose a location where you want to spin up your AKS cluster, such as `westus2`. For a list of locations you can choose, see https://azure.microsoft.com/en-us/global-infrastructure/locations/[^].
+
+Use the Azure console in your browser to create a resource group, or simply do:
+```
+az group create -g $AZURE_RESOURCE_GROUP -l $AZURE_LOCATION
+```
+
+.To recap, you should have the following requirements in place:
+. Azure Account set up.
+. `azure-cli` (`az`) command-line tools installed.
+. `az` login working.
+. Created an Azure Resource Group and selected a location to launch the cluster.
+
+[[aks-cluster-create]]
+=== Set up Fusion on AKS
+
+Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_aks.sh[`setup_f5_aks.sh` script^] to install Fusion 5.x in a AKS cluster. To create a new cluster and install Fusion, simply do:
+```
+./setup_f5_aks.sh -c <cluster_name> -p <aks_resource_group>
+```
+If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+
+Use the `--help` option to see full script usage.
+
+By default, our script installs Fusion into the default namespace; think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces. However, please do not install more than one Fusion release in the same namespace.
+
+You can override the namespace using the `-n` option. In addition, our script uses f5 for the Helm release name; you can customize this using the `-r` option. Helm uses the release name you provide to track a specific instance of an installation, allowing you to perform updates and rollback changes for that specific release only.
+
+You can also pass the `--preview` option to the script, which enables soon-to-be-released features for AKS, such as deploying a multi-zone cluster across 3 availability zones for higher availability guarantees. For more information about the Availability Zone feature, see https://docs.microsoft.com/en-us/azure/aks/availability-zones[^].
+
+It takes a while for AKS to spin up the new cluster. The cluster will have three Standard_D4_v3 nodes which have 4 CPU cores and 16 GB of memory. Behind the scenes, our script calls the `az aks create` command.
+
+WARNING: If using Helm V2, the `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
+
+After running the `setup_f5_aks.sh` script, proceed to <<verifying,Verifying the Fusion Installation>>.
+
+==== AKS Ingress
+
+The `setup_f5_aks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo or getting started purposes. However, you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
+
+Use the `-t` and `-h <hostname>` options to have our script create an Ingress with a TLS certificate issued by Let's Encrypt.
+
+==== Upgrades and Ingress
+
+IMPORTANT: If you used the `-t -h <hostname>` options when installing your cluster, our script created an additional values yaml file named `tls-values.yaml`.
+
+To make things easier for you when upgrading, you should add the settings from this file into your main custom values yaml file.  For example:
+```
+api-gateway:
+  service:
+    type: "NodePort"
+  ingress:
+    enabled: true
+    host: "<hostname>"
+    tls:
+      enabled: true
+    annotations:
+      "networking.gke.io/managed-certificates": "<RELEASE>-managed-certificate"
+      "kubernetes.io/ingress.class": "gce"
+```
+This way, you don't have to remember to pass the additional `tls-values.yaml` file when upgrading.
+// end::aks[]
+
+=== Upgrade Fusion on AKS
+
+// tag::upgrade-aks[]
+
+Before you begin, please consult the {migration-guide}[Migration Guide].
+
+To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
+
+```
+aks_<cluster>_<release>_upgrade_fusion.sh
+```
+// end::upgrade-aks[]
+
+== Other Kubernetes Platforms
+
+// tag::other[]
+
+If you're not running on a managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster. 
+
+Fusion version 5.5 now includes support for the Rancher Kubernetes Engine (RKE) platform. Before deploying Fusion to RKE, you must download and install the link:https://rancher.com/docs/rke/latest/en/[RKE^] software. After configuring your cluster, you can proceed with the Helm v3 installation.
+
+[NOTE]
+You must have a working cluster configured before performing the Helm v3 installation. 
+
+
+[[helm-only]]
+=== Use Helm v3 to Install Fusion
+
+You should upgrade to the latest version of Helm v3 for working with Fusion. If you need to keep Helm V2 for other clusters,
+ensure Helm V3 is ahead of Helm V2 in your working shell's PATH before proceeding.
+
+==== Customize Fusion Chart Settings
+
+Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values `YAML` file. If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create a custom values YAML file for you the first time you run it using the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example`^] as a template.
+
+If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[`customize_fusion_values.sh`^] script to create a custom values YAML file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example`^] template as a starting point:
+```
+./customize_fusion_values.sh  -c <cluster> -n <namespace> \
+  --provider <provider> --num-solr 1 --node-pool "<node_pool>"
+```
+
+NOTE: Pass `--help` for usage details.
+
+In this example:
+
+* `<provider>` is the K8s platform you're running on, such as `gke`
+
+* `<cluster>` is the name of your cluster
+
+* `<namespace>` is the K8s namespace where you plan to install Fusion
+
+NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods. You can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.
+
+This file is referred to as `${MY_VALUES}` in the commands belo. Replace the filename with the correct filename for your environment. Keep this file handy, as you'll need it to customize Fusion settings and upgrade to a newer version.
+
+Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, including the number of Solr and Zookeeper replicas.
+
+Add the Lucidworks Helm repo:
+```
+helm repo add lucidworks https://charts.lucidworks.com
+```
+
+The `customize_fusion_values.sh` script creates an upgrade script to install/upgrade Fusion into Kubernetes using Helm. Look in the directory where you ran `customize_fusion_values.sh` for a script named like:
+`<provider>_<cluster>_<namespace>_upgrade_fusion.sh`. Run this script to install Fusion.
+
+// end::other[]
+
+===  Upgrade Existing Installation with Helm V3
+
+// tag::upgrade-other[]
+
+Before you begin, please consult the {migration-guide}[Migration Guide].
+
+To update an existing installation, do:
+```
+RELEASE=f5
+NAMESPACE=default
+helm repo update
+helm upgrade ${RELEASE} "lucidworks/fusion" --namespace "${NAMESPACE}" --values "${MY_VALUES}"
+```
+
+Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy:
+```
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+```
+
+Zookeeper instances use `OnDelete` to avoid changing critical stateful pods in the Fusion deployment.
+To apply changes to Zookeeper after performing the upgrade (uncommon), you need to manually delete the pods. For example:
+```
+kubectl delete pod f5-zookeeper-0
+```
+
+IMPORTANT: Delete one pod at a time, and verify the new pod is healthy and serving traffic before deleting the next healthy pod.
+
+Alternatively, you can set the `updateStrategy` under the `zookeeper` section in your `"${MY_VALUES}"` file:
+
+```
+solr:
+  ...
+  zookeeper:
+    updateStrategy:
+      type: "RollingUpdate"
+```
+// end::upgrade-other[]
+
+// tag::other[]
+=== RedHat OpenShift
+
+We can deploy Fusion in an existing OpenShift cluster. This cluster should be created using https://cloud.redhat.com/openshift/install[OpenShift Infrastructure Provider^]. A Red Hat Customer Portal account is required. OpenShift Online services are not supported.
+
+The easiest way to install on OpenShift is to run the `setup_f5_k8s.sh` script for your *existing* cluster; use the `--help` option to see script usage. For instance, the following command will install Fusion 5 into the specified namespace (`-n`) and OpenShift cluster (`-c`):
+
+```
+./setup_f5_k8s.sh -c <CLUSTER> -n <NAMESPACE> --provider oc
+```
+
+Tip: `kubectl` should work with your OpenShift cluster (see: https://docs.openshift.com/container-platform/4.1/cli_reference/usage-oc-kubectl.html) and Lucidworks recommends installing the latest `kubectl` for your workstation instead of using `oc` for installing Fusion 5. However, if you do not have `kubectl` installed, then you'll need to update the upgrade script created by `setup_f5_k8s.sh` to use `oc` instead of `kubectl` (search and replace on the BASH script using a text editor).
+
+When you're ready to deploy Fusion to a production-like environment, see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
+
+Lucidworks recommends using Helm v3, but in case Tiller is required for Helm v2, the cluster security needs to be relaxed to allow images to run with different UIDs:
+```
+oc adm policy add-scc-to-group anyuid system:authenticated
+```
+
+// end::other[]
+
+// tag::verify[]
+
+[[verifying]]
+== Verifying the Fusion Installation
+
+In this section, we provide some tips on how to verify the Fusion installation. 
+
+TIP: Check if the Fusion Admin UI is available at `\https://<fusion-host>:6764/admin/`.
+
+Let's review some useful kubectl commands.
+
+=== Enhance the K8s Command-line Experience
+
+Here is a list of tools we found useful for improving your command-line experience with Kubernetes:
+
+* krew (kubectl plugin mgr): https://github.com/kubernetes-sigs/krew/
+* kube-ps1 (show current context on command line prompt): https://github.com/jonmosco/kube-ps1
+* kubectx / kubens (switch between clusters / namespaces): https://github.com/ahmetb/kubectx
+
+=== Useful kubectl commands
+
+// tag::useful-kubectl-commands[]
+
+kubectl reference: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
+
+Set the namespace for `kubectl` if not using the default:
+```
+kubectl config set-context --current --namespace=<NAMESPACE>
+```
+__This saves you from having to pass `-n` with every command.__
+
+Get a list of running pods: `k get pods`
+
+Get logs for a pod using a label: `k logs –l app.kubernetes.io/component=query-pipeline`
+
+Get pod deployment spec and details: `k get pods <pod_id> -o yaml`
+
+Get details about a pod events: `k describe po <pod_id>`
+
+Port forward to a specific pod: `k port-forward <pod_id> 8983:8983`
+
+SSH into a pod: `k exec -it <pod_id> -- /bin/bash`
+
+CPU/Memory usage report for pods: `k top pods`
+
+Forcefully kill a pod: `k delete po <pod_id> --force --grace-period 0`
+
+Scale up (or down) a deployment: `k scale deployment.v1.apps/<id> --replicas=N`
+
+Get a list of pod versions: `k get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq`
+
+=== Check Fusion Pods and Services
+
+Once the install script completes, you can check that all pods and services are available using:
+```
+kubectl get pods
+```
+// end::useful-kubectl-commands[]
+
+If all goes well, you should see a list of pods similar to:
+```
+NAME                                                        READY   STATUS    RESTARTS   AGE
+seldon-controller-manager-6675874894-qxwrv                  1/1     Running   0          8m45s
+f5-admin-ui-74d794f4f8-m5jms                                1/1     Running   0          8m45s
+f5-ambassador-fd6b9b5dc-7ghf6                               1/1     Running   0          8m43s
+f5-api-gateway-6b9998b9c-tmchk                              1/1     Running   0          8m45s
+f5-auth-ui-7565564b4c-rdc74                                 1/1     Running   0          8m42s
+f5-classic-rest-service-0                                   1/1     Running   3          8m44s
+f5-devops-ui-77bb867ffb-fbzxd                               1/1     Running   0          8m42s
+f5-fusion-admin-78b8f8fc7f-4d7l8                            1/1     Running   0          8m42s
+f5-fusion-indexing-599c8d448-xzsvm                          1/1     Running   0          8m44s
+f5-insights-665fd9f6fc-g5psw                                1/1     Running   0          8m43s
+f5-job-launcher-84dd4c5c96-p8528                            1/1     Running   0          8m44s
+f5-job-rest-server-6d44d964b8-xtnxw                         1/1     Running   0          8m45s
+f5-logstash-0                                               1/1     Running   0          8m45s
+f5-ml-model-service-6987dc94c9-9ppp8                        2/2     Running   1          8m45s
+f5-monitoring-grafana-5d499dbb58-pzw72                      1/1     Running   0          10m
+f5-monitoring-prometheus-kube-state-metrics-54d6678dv9h7h   1/1     Running   0          10m
+f5-monitoring-prometheus-pushgateway-7d65c65b85-vwrwf       1/1     Running   0          10m
+f5-monitoring-prometheus-server-0                           2/2     Running   0          10m
+f5-pm-ui-86cbc5bb65-nd2n8                                   1/1     Running   0          8m44s
+f5-pulsar-bookkeeper-0                                      1/1     Running   0          8m45s
+f5-pulsar-broker-b56cc776f-56msx                            1/1     Running   0          8m45s
+f5-query-pipeline-5d75d7d5f4-l2mdf                          1/1     Running   0          8m43s
+f5-connectors-7bb6cfc65f-7wfs2                              1/1     Running   0          8m42s
+f5-connectors-backend-987fdc648-dldwv                       1/1     Running   0          8m45s
+f5-rules-ui-6b9d55b78f-9hzzj                                1/1     Running   0          8m43s
+f5-solr-0                                                   1/1     Running   0          8m44s
+f5-solr-exporter-c4687c785-jsm7x                            1/1     Running   0          8m45s
+f5-ui-6cdbcc68c6-rj9cq                                      1/1     Running   0          8m45s
+f5-webapps-6d6bb9bfd-hm4qx                                  1/1     Running   0          8m45s
+f5-workflow-controller-7b66679fb7-sjbvp                     1/1     Running   0          8m44s
+f5-zookeeper-0                                              1/1     Running   0          8m45s
+```
+The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in your custom values YAML file.
+Also, don't worry if you see some pods having been restarted as that just means they were too slow to come up and Kubernetes killed and restarted them.
+You do want to see at least one pod running for every service. If a pod is not running after waiting a sufficient amount of time,
+use `kubectl logs <pod_id>` to see the logs for that pod; to see the logs for previous versions of a pod, use: `kubectl logs <pod_id> -p`.
+You can also look at the actions Kubernetes performed on the pod using `kubectl describe po <pod_id>`.
+
+To see a list of Fusion services, do:
+```
+kubectl get svc
+```
+
+For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion/5.12/195/fusion-microservices[Fusion microservices].
+
+Once you're ready to build a Fusion cluster for production, please see see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
+
+=== Upgrading with Zero Downtime
+
+One of the most powerful features provided by Kubernetes and a cloud-native microservices architecture is the ability to do a rolling update on a live cluster. Fusion 5 allows customers to upgrade from Fusion 5.x.y to a later 5.x.z version on a live cluster with zero downtime or disruption of service.
+
+When Kubernetes performs a rolling update to an individual microservice, there will be a mix of old and new services in the cluster concurrently (only briefly in most cases) and requests from other services will be routed to both versions. Consequently, Lucidworks ensures all changes we make to our service do not break the API interface exposed to other services in the same 5.x line of releases. We also ensure stored configuration remains compatible in the same 5.x release line.
+
+Lucidworks releases minor updates to individual services frequently, so our customers can pull in those upgrades using Helm at their discretion.
+
+To upgrade your cluster at any time, use the `--upgrade` option with our setup scripts in this repo.
+
+The scripts in this repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks.
+To see what would be upgraded, you can pass the `--dry-run` option to the script.
+
+=== Grafana Dashboards
+
+Get the initial Grafana password from a K8s secret by doing:
+
+```
+kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-monitoring-grafana \
+  -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+
+With Grafana, you can either setup a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s LoadBalancer.
+To define a LoadBalancer, do (replace ${RELEASE} with your Helm release label):
+
+```
+kubectl expose deployment ${RELEASE}-monitoring-grafana --type=LoadBalancer --name=grafana --port=3000 --target-port=3000
+```
+
+You can use `kubectl get services --namespace <namespace>` to determine when the load balancer is setup and its IP address. Direct your browser to http://<GrafanaIP>:3000 and enter the username `admin@localhost` and the password that was returned in the previous step.
+
+This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
+
+The dashboards and datasoure will be setup for you in grafana, simply navigate to `Dashboards` -> `Manage` to view the vailable dashboards
+
+// end::verify[]
+
+
+// end::body[]
